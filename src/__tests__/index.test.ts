@@ -36,3 +36,32 @@ describe('Health endpoint', () => {
     expect(timestamp).toBeInstanceOf(Date)
   })
 })
+
+describe('Todos endpoint', () => {
+  it('should return todos list on GET /todos', async () => {
+    const res = await app.request('/todos')
+    
+    expect(res.status).toBe(200)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('data')
+    expect(Array.isArray(body.data)).toBe(true)
+  })
+
+  it('should return todos with correct structure', async () => {
+    const res = await app.request('/todos')
+    
+    const body = await res.json()
+    expect(body.data.length).toBeGreaterThan(0)
+    
+    const todo = body.data[0]
+    expect(todo).toHaveProperty('id')
+    expect(todo).toHaveProperty('title')
+    expect(todo).toHaveProperty('completed')
+    expect(todo).toHaveProperty('createdAt')
+    expect(typeof todo.id).toBe('string')
+    expect(typeof todo.title).toBe('string')
+    expect(typeof todo.completed).toBe('boolean')
+    expect(typeof todo.createdAt).toBe('string')
+  })
+})
