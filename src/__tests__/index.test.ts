@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { app } from '../index'
 import { testClient } from 'hono/testing'
+import { resetTodos } from '../store'
 
 describe('Root endpoint', () => {
   it('should return welcome message on GET /', async () => {
@@ -63,5 +64,93 @@ describe('Todos endpoint', () => {
     expect(typeof todo.title).toBe('string')
     expect(typeof todo.completed).toBe('boolean')
     expect(typeof todo.createdAt).toBe('string')
+  })
+})
+
+describe('POST /todos endpoint', () => {
+  beforeEach(() => {
+    resetTodos()
+  })
+
+  it('should create a new todo with valid input', async () => {
+    const res = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'New Todo' }),
+    })
+    
+    expect(res.status).toBe(201)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('data')
+    expect(body.data.title).toBe('New Todo')
+    expect(body.data.completed).toBe(false)
+    expect(body.data.id).toBeDefined()
+    expect(body.data.createdAt).toBeDefined()
+  })
+
+  it('should return 400 when title is missing', async () => {
+    const res = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    })
+    
+    expect(res.status).toBe(400)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('success')
+    expect(body.success).toBe(false)
+  })
+
+  it('should return 400 when title is empty', async () => {
+    const res = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '' }),
+    })
+    
+    expect(res.status).toBe(400)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('success')
+    expect(body.success).toBe(false)
+  })
+
+  it('should return 400 when title is whitespace only', async () => {
+    const res = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '   ' }),
+    })
+    
+    expect(res.status).toBe(400)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('success')
+    expect(body.success).toBe(false)
+  })
+
+  it('should trim whitespace from title', async () => {
+    const res = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '  Trimmed Todo  ' }),
+    })
+    
+    expect(res.status).toBe(201)
+    
+    const body = await res.json()
+    expect(body.data.title).toBe('Trimmed Todo')
   })
 })

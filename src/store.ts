@@ -51,3 +51,7 @@ export function deleteTodo(id: string): boolean {
   todos.splice(index, 1)
   return true
 }
+
+export function resetTodos(): void {
+  todos = []
+}
