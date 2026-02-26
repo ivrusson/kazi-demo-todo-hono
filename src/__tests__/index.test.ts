@@ -214,3 +214,204 @@ describe('DELETE /todos/:id endpoint', () => {
     expect(deletedTodo).toBeUndefined()
   })
 })
+
+describe('PATCH /todos/:id endpoint', () => {
+  beforeEach(() => {
+    resetTodos()
+  })
+
+  it('should update todo title successfully', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Original Title' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Updated Title' }),
+    })
+    
+    expect(patchRes.status).toBe(200)
+    
+    const body = await patchRes.json()
+    expect(body.data.title).toBe('Updated Title')
+    expect(body.data.completed).toBe(false)
+  })
+
+  it('should update todo completed status successfully', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo to complete' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ completed: true }),
+    })
+    
+    expect(patchRes.status).toBe(200)
+    
+    const body = await patchRes.json()
+    expect(body.data.completed).toBe(true)
+  })
+
+  it('should update both title and completed simultaneously', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Original' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Updated', completed: true }),
+    })
+    
+    expect(patchRes.status).toBe(200)
+    
+    const body = await patchRes.json()
+    expect(body.data.title).toBe('Updated')
+    expect(body.data.completed).toBe(true)
+  })
+
+  it('should return 404 for non-existent todo', async () => {
+    const res = await app.request('/todos/non-existent-id', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Updated' }),
+    })
+    
+    expect(res.status).toBe(404)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('error')
+    expect(body.error).toBe('Todo not found')
+  })
+
+  it('should return 400 for invalid input (empty title)', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '' }),
+    })
+    
+    expect(patchRes.status).toBe(400)
+    
+    const body = await patchRes.json()
+    expect(body).toHaveProperty('success')
+    expect(body.success).toBe(false)
+  })
+
+  it('should return 400 for invalid input (whitespace title)', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '   ' }),
+    })
+    
+    expect(patchRes.status).toBe(400)
+  })
+
+  it('should trim whitespace from title on update', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: '  Trimmed Title  ' }),
+    })
+    
+    expect(patchRes.status).toBe(200)
+    
+    const body = await patchRes.json()
+    expect(body.data.title).toBe('Trimmed Title')
+  })
+
+  it('should return 400 for invalid completed type', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const patchRes = await app.request(`/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ completed: 'yes' }),
+    })
+    
+    expect(patchRes.status).toBe(400)
+  })
+})
