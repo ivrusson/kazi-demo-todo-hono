@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { getTodos, createTodo } from './store'
+import { getTodos, createTodo, deleteTodo } from './store'
 import { createTodoSchema } from './schemas'
 
 const app = new Hono()
@@ -22,6 +22,17 @@ app.post('/todos', zValidator('json', createTodoSchema), (c) => {
   const validated = c.req.valid('json')
   const newTodo = createTodo(validated.title)
   return c.json({ data: newTodo }, 201)
+})
+
+app.delete('/todos/:id', (c) => {
+  const id = c.req.param('id')
+  const deleted = deleteTodo(id)
+  
+  if (!deleted) {
+    return c.json({ error: 'Todo not found' }, 404)
+  }
+  
+  return c.body(null, 204)
 })
 
 export { app }
