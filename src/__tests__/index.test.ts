@@ -154,3 +154,63 @@ describe('POST /todos endpoint', () => {
     expect(body.data.title).toBe('Trimmed Todo')
   })
 })
+
+describe('DELETE /todos/:id endpoint', () => {
+  beforeEach(() => {
+    resetTodos()
+  })
+
+  it('should delete a todo and return 204', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo to delete' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    const deleteRes = await app.request(`/todos/${todoId}`, {
+      method: 'DELETE',
+    })
+    
+    expect(deleteRes.status).toBe(204)
+  })
+
+  it('should return 404 when deleting non-existent todo', async () => {
+    const res = await app.request('/todos/non-existent-id', {
+      method: 'DELETE',
+    })
+    
+    expect(res.status).toBe(404)
+    
+    const body = await res.json()
+    expect(body).toHaveProperty('error')
+    expect(body.error).toBe('Todo not found')
+  })
+
+  it('should actually remove the todo from the list', async () => {
+    const createRes = await app.request('/todos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'Todo to delete' }),
+    })
+    
+    const createBody = await createRes.json()
+    const todoId = createBody.data.id
+    
+    await app.request(`/todos/${todoId}`, {
+      method: 'DELETE',
+    })
+    
+    const getRes = await app.request('/todos')
+    const getBody = await getRes.json()
+    
+    const deletedTodo = getBody.data.find((todo: { id: string }) => todo.id === todoId)
+    expect(deletedTodo).toBeUndefined()
+  })
+})
