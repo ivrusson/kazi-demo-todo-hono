@@ -11,10 +11,16 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["hono", "api", "todo"],
+  "keywords": [
+    "hono",
+    "api",
+    "todo"
+  ],
   "license": "MIT",
   "dependencies": {
-    "hono": "^4.6.0"
+    "@hono/zod-validator": "^0.7.6",
+    "hono": "^4.6.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
