@@ -8,3 +8,8 @@ export interface Todo {
 export interface CreateTodoDto {
   title: string
 }
+
+export interface UpdateTodoDto {
+  title?: string
+  completed?: boolean
+}
